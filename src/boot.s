@@ -104,12 +104,9 @@ hlt:
 jmp $400
 
 fatt: !text "FAT12   "
-lablet: !text "RPOS BOOT  "
 boott: !text "BOOT       "
-kernelt !text "KERNEL     "
 errort: !text "error 0x"
 error_code_ascii: !text "00", 0
-
 
 error:
     !al
@@ -297,15 +294,18 @@ odd_entry:
     rep #$30
     !al
     clc
+    cmp #$8000
     rol
+    cmp #$8000
     rol
+    cmp #$8000
     rol
-    rol
+    cmp #$8000
     rol
 exitrf:
     rep #$30
     plp
-    plx
+    plx 
     ply
     rts 
 
@@ -321,7 +321,7 @@ mbr_type_1: !byte $01 ; fat12
 mbr_lbas_1: !32 $00000002 ; starts at $2
 mbr_lbae_1: !32 $000001fe ; size of 510
 
-*= $6fe
+*= $6fe 
 !word $aa55
 
 *= $700 ; extended boot code
@@ -347,23 +347,6 @@ load_kernel:
     jmp error
 
 fat12:
-     ; compare fs lable
-    lda #FS_LABLE
-    sta arg0
-    lda #lablet
-    sta arg1
-    lda #11
-    sta arg2
-    jsr memcmp
-    and #$01
-    cmp #0
-    beq rposboot
-
-    lda #$3330
-    sta error_code_ascii
-    jmp error
-
-rposboot:
     ; copy serial number
     lda #FS_SERIAL
     sta arg0
@@ -482,7 +465,6 @@ boot_found:
     lda #$3530
     sta error_code_ascii
     jmp error
-
 kernel_found:
     lda DE2_SIZE
     sta 246
@@ -498,8 +480,10 @@ kernel_found:
     ldy #0
     ldx #0
     bra load_kernel_loop
+!text "hello"
 g65djn7k:
     jsr readfat
+    mmu #$FF
     sta arg0
     clc
     adc fat_cluster
@@ -567,6 +551,7 @@ mcmpne:
     rts
 
 magic: !text $fe, "RPOS"
+kernelt !text "KERNEL     "
 
 *= $900 ; boot services memory
 fat_serial:!32 $00000000
@@ -584,7 +569,7 @@ kernel:
 kernel_magic: !text "     "
 kernel_entry:
 
-*= $2000 ; ram
+*= $8000 ; ram
 
 *= $f000
 file_allocation_table:
